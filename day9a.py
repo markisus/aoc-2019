@@ -30,6 +30,7 @@ def parse_op(op):
         parsed.append(op[-(3 + i)])
     return parsed
 
+DEBUG = True
 def step_program(instruction_ptr, memory, input_stream, output_stream):
     """
     executes operation and returns the distance to next instruction
@@ -89,7 +90,8 @@ def step_program(instruction_ptr, memory, input_stream, output_stream):
         return instruction_ptr + 4
     elif opcode == INPUT:
         if not input_stream:
-            print("Waiting for input")
+            if DEBUG:
+                print("Waiting for input")
             return instruction_ptr
         input_value = input_stream.popleft()
         memory[address_a] = input_value
@@ -143,6 +145,52 @@ with open("day9.txt") as f:
     memory_list = [int(s.strip()) for s in f.readline().split(",")]
 
 memory = make_memory(memory_list)
+
+class IntCodeComputer:
+    def __init__(self, memory):
+        self.instruction_ptr = 0
+        self.memory = memory
+        self.input_stream = deque()
+        self.output_stream = deque()
+
+    def step(self):
+        if self.done():
+            raise RuntimeError("Cannot step, already done")
+
+        self.instruction_ptr = \
+            step_program(self.instruction_ptr, 
+                         self.memory, 
+                         self.input_stream, 
+                         self.output_stream)
+        return self.instruction_ptr
+
+    def keep_stepping(self):
+        if self.done():
+            raise RuntimeError("Cannot step, already done")
+        prev_instruction_ptr = self.instruction_ptr
+        while not self.done():
+            self.step()
+            if prev_instruction_ptr == self.instruction_ptr:
+                break
+            prev_instruction_ptr = self.instruction_ptr
+
+    def push_input(self, d):
+        self.input_stream.append(d)
+
+    def output_len(self):
+        return len(self.output_stream)
+
+    def pop_output(self):
+        return self.output_stream.popleft()
+
+    def done(self):
+        return self.instruction_ptr < 0
+
+    def copy(self):
+        mem_copy = self.memory.copy()
+        istream = self.input_stream.copy()
+        ostream = self.output_stream.copy()
+        return IntCodeComputer(mem_copy)
 
 if __name__ == "__main__":
     # memdump(memory)
