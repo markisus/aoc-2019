@@ -30,7 +30,7 @@ def parse_op(op):
         parsed.append(op[-(3 + i)])
     return parsed
 
-DEBUG = True
+DEBUG = False
 def step_program(instruction_ptr, memory, input_stream, output_stream):
     """
     executes operation and returns the distance to next instruction
